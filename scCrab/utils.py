@@ -20,6 +20,7 @@ from torchMBM.model import MBM
 import time
 from ikarus import utils, classifier, gene_list
 import upsetplot
+import os
 
 #save and load pickle files
 def save_obj(obj, name):
@@ -34,22 +35,23 @@ def load_obj(name):
 
 def get_3selected_dataset(adatas,traindata_name,referencedata_name,testdata_name):
     """
-    Obtain the gene intersection of the datasets
+    Obtain the gene intersection of the datasets.
     
     Parameters
     ----------
     adatas
         Anndata datasets that contain training dataset, testing dataset, and reference dataset.
     traindata_name
-        The name of training dataset in adatas
+        The name of training dataset in adatas.
     referencedata_name
-        The name of reference dataset in adatas
+        The name of reference dataset in adatas.
     testdata_name
-        The name of test dataset in adatas
+        The name of test dataset in adatas.
     
     Returns
     -------
-    
+    Train_data, reference_data, and test_data have the same genes.
+
    
     """
     
@@ -67,18 +69,18 @@ def get_3selected_dataset(adatas,traindata_name,referencedata_name,testdata_name
 
 def get_reference_dataset(adatas, referencedata_name):
     """
-    Generate pseudo-bulk data through reference datasets
+    Generate pseudo-bulk data through reference datasets.
     
     Parameters
     ----------
     adatas
         Anndata datasets that contain training dataset, testing dataset, and reference dataset.
     referencedata_name
-        The name of reference dataset in adatas
+        The name of reference dataset in adatas.
         
     Returns
     -------
-    
+    Anndata datasets that contain processed reference dataset.
    
     """
     if referencedata_name+"_ref" in adatas:
@@ -106,15 +108,30 @@ def get_reference_dataset(adatas, referencedata_name):
     
 def load_data(train_data, reference_data, main_obs, batch_size, split_ratio,add_noise = True, sigma = 0.5):
     """
-    (write functions here)
+    Get dataloader for training and validation datasets.
     
     Parameters
     ----------
-    
-    
+    train_data
+        Anndata datasets that contain training dataset.
+    reference_data
+        Anndata datasets that contain reference dataset.
+    main_obs
+        The cell type annotation used for classification, only contains Tumor and Normal.
+    batch_size
+        The number of data samples processed at once during training in the neural network.
+    split_ratio 
+        The proportion in which a dataset is divided into training and validation.
+    add_noise
+        Choose whether to add Gaussian noise into the network or not.
+    sigma
+        The variance of Gaussian noise.
     Returns
     -------
-    
+    trainloader
+        Dataloader for training dataset.
+    validlodader
+        Dataloader for validation dataset.
    
     """
     tdata_X = train_data.X.copy()
@@ -156,9 +173,9 @@ def get_genelist(adatas, traindata_name, save_path, obs_name='sub_ct'):
     adatas
         Anndata datasets that contain training dataset, testing dataset, and reference dataset.
     traindata_name
-        The name of training dataset in adatas
+        The name of training dataset in adatas.
     save_path
-        The path where the gene list is saved
+        The path where the gene list is saved.
     obs_name
         The label of cells used to select the gene list.
 
@@ -202,5 +219,7 @@ def get_genelist(adatas, traindata_name, save_path, obs_name='sub_ct'):
     gene_list_names = ["Normal", "Tumor"]
     gmt = pd.DataFrame(gene_lists, index=gene_list_names)
     gmt.insert(0, "00", "ikarus")
+    if not os.path.exists(save_path + traindata_name):
+        os.makedirs(save_path + traindata_name)
     gmt.to_csv(save_path + traindata_name + "/signatures.gmt", header=None, sep="\t")
 

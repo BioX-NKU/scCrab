@@ -17,6 +17,7 @@ from .modules import *
 from .utils import *
 from .functional import *
 from kneed import KneeLocator
+import os
 
 
 class AttentionWide(nn.Module):
@@ -80,9 +81,11 @@ class MBM(nn.Module):
         number of feature of input gene expression matrix
     d_lat
         dimensions of latent feature
+    save_path
+        directory of saved files
     """
 
-    def __init__(self, d_in, d_lat):
+    def __init__(self, d_in, d_lat, ct_key, save_path):
         super(MBM,self).__init__() 
         self.d_prior = d_lat // 5
         self.fc1_MBM = BayesLinear(d_in, self.d_prior)
@@ -90,6 +93,8 @@ class MBM(nn.Module):
         self.attn = AttentionWide(d_lat)
         self.fc2= nn.Linear(d_lat,64,bias=False)
         self.fc3= nn.Linear(64,2,bias=False)
+        self.save_path = save_path
+        self.ct_key = ct_key
         
     def prior_initialize(self, prior):
         if not isinstance(prior, torch.FloatTensor):
@@ -157,15 +162,10 @@ class MBM(nn.Module):
                     if not belongs_to(cur_layer, excluded) and param.requires_grad:
                         params.append(param)
             return iter(params)
-
-        torch.cuda.is_available()
-        device = "cuda:0" if torch.cuda.is_available() else "cpu"
-        print(f"Using {device} device")
-        torch.device("cuda:2")
         
-                #put data into datalodar
+        #put data into datalodar
         tdata_X = tdata.X.copy()
-        tdata_y = tdata.obs["tier_0"]
+        tdata_y = tdata.obs[self.ct_key]
         tdata_y = [0 if i =='Normal' else i for i in tdata_y]
         tdata_y = [1 if i =='Tumor' else i for i in tdata_y]
         tdata_X=tdata_X.A
@@ -269,7 +269,9 @@ class MBM(nn.Module):
             print(f'Epoch {epoch + 1} \t Training Loss: {Training_Loss} \t Validation Loss: {Validation_Loss} \t Time: {e-s}')
             s = time.time()
             
-            torch.save(self.state_dict(), 'model_pth/saved_model_'+str(epoch)+'.pth')
+            if not os.path.exists(self.save_path+'model_pth'):
+                os.makedirs(self.save_path+'model_pth') 
+            torch.save(self.state_dict(), self.save_path+'model_pth/saved_model_'+str(epoch)+'.pth')
             num = num + 1
 
             if abs(valid_loss/valid_count-last_loss) < 5e-5 or valid_loss/valid_count-last_loss > 1e-3:
@@ -305,7 +307,7 @@ class MBM(nn.Module):
 
     def score(self,test_subset,target,out_path = False):
         x_test = test_subset.X.copy()
-        y_test = test_subset.obs["tier_0"]
+        y_test = test_subset.obs[self.ct_key]
         
         y_test = [0 if i =='Normal' else i for i in y_test]
         y_test = [1 if i =='Tumor' else i for i in y_test]

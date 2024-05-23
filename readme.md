@@ -41,11 +41,11 @@ Finally, utilize the ``scCrab`` function to obtain the predicted labels and prob
 
 ```python
 from scCrab import *
-pred, prob = scCrab(adatas=adatas, train_name="BI",reference_name="TIR",test_name="MA",device="cuda:0",
+pred, prob = run_scCrab(adatas=adatas, train_name="BI",reference_name="TIR",test_name="MA",device="cuda:0",
        main_obs='major_ct', detail_obs='sub_ct', save_path=result_path)
 ```
 
-Additionally, the ``evaluate_metrics`` function is ready for use to obtain AUPRC, BAS, and kappa values of the prediction.
+Additionally, the ``evaluate_metrics`` function is ready for use to obtain AUPRC, balanced accuracy score, and kappa values of the prediction.
 
 ```python
 AUPRC, bas, kappa = evaluate_metrics(adatas, test_name="MA", main_obs="major_ct", pred=pred, prob=prob)

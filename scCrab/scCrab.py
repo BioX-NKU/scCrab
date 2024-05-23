@@ -1,45 +1,45 @@
 from utils import *
 import ikarus
 
-def scCrab(adatas,train_name,test_name,reference_name, save_path, device, main_obs='major_ct', detail_obs='sub_ct', batch_size=256,epochs=100,lr=1e-5,sigma = 1, delta=1, split_ratio=0.25):
+def run_scCrab(adatas,train_name,test_name,reference_name, save_path, device, main_obs='major_ct', detail_obs='sub_ct', batch_size=256,epochs=100,lr=1e-5,sigma = 1, delta=1, split_ratio=0.25):
     """
-    scCrab: a reference-guided cancer cell identification integrated method based on Bayesian neural networks
+    scCrab: a reference-guided cancer cell identification integrated method based on Bayesian neural networks.
     
     Parameters
     ----------
     adatas
         Anndata datasets that contain training dataset, testing dataset, and reference dataset.
     train_name
-        The name of training dataset in adatas
+        The name of training dataset in adatas.
     reference_name
-        The name of reference dataset in adatas
+        The name of reference dataset in adatas.
     test_name
-        The name of test dataset in adatas
+        The name of test dataset in adatas.
     device
-        The hardware on which the code is executed, cpu or cuda. We prefer to use cuda
+        The hardware on which the code is executed, cpu or cuda. We prefer to use cuda.
     save_path
-        The path where the prediction results and evaluation metrics are saved
+        The path where the prediction results and evaluation metrics are saved.
     main_obs
-        The cell type annotation used for classification, only contain Tumor and Normal
+        The cell type annotation used for classification, only contain Tumor and Normal.
     detail_obs
-        A more detailed cell type annotation used for generating gene list
+        A more detailed cell type annotation used for generating gene list.
     batch_size
-        The number of data samples processed at once during training in the neural network
+        The number of data samples processed at once during training in the neural network.
     epochs
-        The number of times the entire training dataset is passed forward and backward through the neural network 
+        The number of times the entire training dataset is passed forward and backward through the neural network.
     lr
-        Learning rate
+        Learning rate.
     sigma
-        The variance of Gaussian noise
+        The variance of Gaussian noise.
     delta
-        The weight of the KL divergence in the loss function
+        The weight of the KL divergence in the loss function.
     split_ratio 
-        The proportion in which a dataset is divided into training and validation
+        The proportion in which a dataset is divided into training and validation.
     
     Returns
     -------
     pred_bik
-        The prediction of whether a cell is a tumor cell or not
+        The prediction of whether a cell is a tumor cell or not. 1 means Tumor and 0 means Normal.
     prob_bik
         The probability of a cell being tumorous.
    
@@ -87,15 +87,7 @@ def scCrab(adatas,train_name,test_name,reference_name, save_path, device, main_o
     vote_pre = (vote > (vote_time+1)/2).astype(int)
     if vote_time != 0:
             vote_of_1 = vote_of_1/vote_time 
-    #AUPRC = average_precision_score(y_test, vote_of_1)
-    #bas = balanced_accuracy_score(y_test, vote_pre)
-    #kappa = cohen_kappa_score(y_test, vote_pre)
-    #target[test_name] = [vote_pre, vote_of_1, bas, AUROC, AUPRC, kappa, F1_score]
-    #save_obj(target,save_path+train_name+".pkl")
-    #print('- AUPRC: %f ' % (AUPRC))
-    #print('- bas: %f ' % (bas))
-    #print('- kappa : %f' % (kappa))
-    #return vote_pre, AUPRC, bas, kappa
+
     prob_BMM = vote_of_1
     
     #ikarus part
@@ -108,12 +100,9 @@ def scCrab(adatas,train_name,test_name,reference_name, save_path, device, main_o
     prob_ikarus = pd.read_csv(save_path+train_name+'/'+test_name+'/prediction.csv')['final_pred_proba_Tumor'].tolist()
     
     #ensemble
-    #reals = list(testdata.obs[main_obs])
-    #reals = [0 if i =='Normal' else i for i in reals]
-    #reals = [1 if i =='Tumor' else i for i in reals]
     prob_bik, pred_bik = [],[]
     for i in range(testdata.shape[0]):
-        x = np.mean([prob_BMM[i],prob_ikarus[i]])BMM
+        x = np.mean([prob_BMM[i],prob_ikarus[i]])
         prob_bik.append(x)
         if x>0.5:
             pred_bik.append(1)
@@ -123,6 +112,32 @@ def scCrab(adatas,train_name,test_name,reference_name, save_path, device, main_o
     return pred_bik, prob_bik
 
 def evaluate_metrics(adatas, test_name, main_obs, pred, prob):
+    """
+    Get evaluation metrics.
+    
+    Parameters
+    ----------
+    adatas
+        Anndata datasets that contain training dataset, testing dataset, and reference dataset.
+    test_name
+        The name of test dataset in adatas.
+    main_obs
+        The cell type annotation used for classification, only contain Tumor and Normal.
+    pred
+        The prediction of whether a cell is a tumor cell or not, outputted from scCrab.
+    prob
+        The probability of a cell being tumorous, outputted from scCrab.
+        
+    Returns
+    -------
+    AUPRC
+        Area under Precision-Recall Curve.
+    bas
+        Balanced accuracy score.
+    kappa
+        Cohen's Kappa score.
+   
+    """
     y_test = adatas[test_name].obs[main_obs]
     y_test = [0 if i =='Normal' else i for i in y_test]
     y_test = [1 if i =='Tumor' else i for i in y_test]
