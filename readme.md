@@ -15,10 +15,12 @@
 ### Using tutorial:
 
 #### Preparation
+
 Please ensure that all the packages in the ``requirements.txt`` file have been correctly downloaded and installed. Simultaneously, create a new folder named ``model_pth`` at the top level directory (i.e., one level above the folder where the original code resides). Place all the ipynb files to be executed in the folder that is one level above the original code folder.
 
 #### Running Process
-First, construct a file list that includes the training set, reference set, and test set. This can be done using either the provided dataset or the user's own dataset. Please note that each of the AnnData objects here have undergone preprocessing. Specifically, the count matrix has been normalized to the total number of reads per cell and log transformed with a base of 2 and a pseudocount of 1. 
+
+First, construct a file list that includes the training set, reference set, and test set. This can be done using either the provided dataset or the user's own dataset. Please note that each of the AnnData objects here have undergone preprocessing. Specifically, the count matrix has been normalized to the total number of reads per cell and log transformed with a base of 2 and a pseudocount of 1.
 
 ```python
 from pathlib import Path
@@ -52,3 +54,12 @@ AUPRC, bas, kappa = evaluate_metrics(adatas, test_name="MA", main_obs="major_ct"
 ```
 
 The source datasets are available at [here](https://www.dropbox.com/scl/fi/55hhr8izbpndgha1d9eju/datasets.zip?rlkey=9ugqimbe5u4swls3fitru3k7p&dl=0).
+
+---
+
+####  Correction Notice
+
+We noticed that one sub-figure page in this supplementary file was placed incorrectly. The affected page is page 12, the second continue figure of **Supplementary Figure 2**. The reason why 'KLA|TIS' figure is same as the 'KLA|TIR', is that we place the wrong figure of 'KLA|TIS'. The corrected figure of 'KLA|TIS' is [Corrected](https://github.com/BioX-NKU/scCrab/blob/main/KLA_TIS.pdf).
+This error only concerns the figure placement and does not affect the analyses, results, or conclusions. 
+
+We apologize for the confusion.
